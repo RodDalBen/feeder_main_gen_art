@@ -108,7 +108,7 @@ fnc_voronoi <- function(title_no_spaces = NA,
   
   img_final <- magick::image_composite(img_circle,
                                        img_qr_code,
-                                       offset = paste0("+", size_px*1.1, "+", size_px*1.108))   #(5730-750), "+", (5730-750))) 
+                                       offset = paste0("+", size_px*1.08, "+", size_px*1.08))
   
   # save final work
   magick::image_write(img_final, 
