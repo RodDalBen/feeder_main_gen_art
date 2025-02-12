@@ -18,6 +18,9 @@ fnc_voronoi <- function(title_no_spaces = NA,
                         input_file = "03_step3.jpg",
                         input_path = here("input"),
                         output_path = here("output"),
+                        size_px = 1500,
+                        print_height_cm = NA,
+                        print_width_cm = NA,
                         qr_code_signature = NA){
   
   # check required info 
@@ -30,6 +33,7 @@ fnc_voronoi <- function(title_no_spaces = NA,
   if(!require(qrcode)){install.packages("qrcode")}
   if(!require(imager)){install.packages("imager")}
   if(!require(magick)){install.packages("magick")}
+  if(!require(rsvg)){install.packages("rsvg")}
   if(!require(ggvoronoi)){remotes::install_github("garretrc/ggvoronoi", dependencies = TRUE, build_opts = c("--no-resave-data"))}
   if(!require(tidyverse)){devtools::install_github("doehm/cropcircles")}
   
@@ -41,11 +45,12 @@ fnc_voronoi <- function(title_no_spaces = NA,
   if(!"ggvoronoi" %in% .packages()){library(ggvoronoi)}
   if(!"cropcircles" %in% .packages()){library(cropcircles)}
   if(!"magick" %in% .packages()){library(magick)}
+  if(!"rsvg" %in% .packages()){library(rsvg)}
   
   # generate qrcode for signature   
   create_qr_code <- qrcode::generate_svg(qrcode::qr_code(qr_code_signature),
                                          filename = file.path(input_path, "qr_code.svg"),
-                                         size = 150,
+                                         size = size_px/10,
                                          show = F)
   
   img_qr_code <- magick::image_read(file.path(input_path, "qr_code.svg"))
@@ -82,14 +87,14 @@ fnc_voronoi <- function(title_no_spaces = NA,
   # save vonoroi diagram
   ggsave(plot = p,
          filename = "01_step1.jpeg", path = output_path,
-         height = 1500, width = 1500, units = "px")
+         height = size_px, width = size_px, units = "px")
   
   # load image, crop circle, add border
   img_circle <- 
     magick::image_read(cropcircles::crop_circle(here("output", "01_step1.jpeg"), 
                                                 bg_fill = "black", 
                                                 border_size = 5)) %>% 
-    magick::image_border(., color = "black", geometry = "200x200")
+    magick::image_border(., color = "black", geometry = paste0(size_px/7.5, "x", size_px/7.5))
   
   # save circle with border  
   magick::image_write(img_circle, 
@@ -103,7 +108,7 @@ fnc_voronoi <- function(title_no_spaces = NA,
   
   img_final <- magick::image_composite(img_circle,
                                        img_qr_code,
-                                       offset = paste0("+", (1910-250), "+", (1910-250))) 
+                                       offset = paste0("+", size_px*1.1, "+", size_px*1.108))   #(5730-750), "+", (5730-750))) 
   
   # save final work
   magick::image_write(img_final, 
@@ -112,6 +117,30 @@ fnc_voronoi <- function(title_no_spaces = NA,
                       quality = 100,
                       density = 300)
   
+  # add black background for printing
+  if(!is.na(print_height_cm)){
+    # read image
+    image_to_print <- image_read(file.path(output_path, paste0(title_no_spaces, ".jpeg")))
+    # cm to pixels
+    width_px <- round(print_width_cm*(300/2.54)) 
+    height_px <- round(print_height_cm*(300/2.54))
+    # original dimensions
+    img_info <- image_info(image_to_print)
+    orig_width <- img_info$width
+    orig_height <- img_info$height
+    # black background canvas
+    canvas <- image_blank(width_px, height_px, color = "black")
+    # image on the black background
+    composite_image <- image_composite(canvas, image_to_print, operator = "over",
+                                       offset = paste0("+", (width_px - orig_width) %/% 2, 
+                                                       "+", (height_px - orig_height) %/% 2))
+    # save
+    image_write(composite_image, 
+                path = file.path(output_path, paste0(title_no_spaces, ".pdf")), 
+                format = "pdf", 
+                density = "300x300")
+  }
+  
   # status message
   message(paste0("All done! See ", title_no_spaces, " at: ", output_path))
 }
@@ -119,4 +148,7 @@ fnc_voronoi <- function(title_no_spaces = NA,
 # create feeder main
 fnc_voronoi(title_no_spaces = "feeder_main",
             sample = 25000,
+            size_px = 4500,
+            print_width_cm = 51,
+            print_height_cm = 71,
             qr_code_signature = "https://github.com/RodDalBen/feeder_main_gen_art")
