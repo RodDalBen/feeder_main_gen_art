@@ -33,7 +33,6 @@ fnc_voronoi <- function(title_no_spaces = NA,
   if(!require(qrcode)){install.packages("qrcode")}
   if(!require(imager)){install.packages("imager")}
   if(!require(magick)){install.packages("magick")}
-  if(!require(rsvg)){install.packages("rsvg")}
   if(!require(ggvoronoi)){remotes::install_github("garretrc/ggvoronoi", dependencies = TRUE, build_opts = c("--no-resave-data"))}
   if(!require(tidyverse)){devtools::install_github("doehm/cropcircles")}
   
@@ -45,8 +44,7 @@ fnc_voronoi <- function(title_no_spaces = NA,
   if(!"ggvoronoi" %in% .packages()){library(ggvoronoi)}
   if(!"cropcircles" %in% .packages()){library(cropcircles)}
   if(!"magick" %in% .packages()){library(magick)}
-  if(!"rsvg" %in% .packages()){library(rsvg)}
-  
+
   # generate qrcode for signature   
   create_qr_code <- qrcode::generate_svg(qrcode::qr_code(qr_code_signature),
                                          filename = file.path(input_path, "qr_code.svg"),
@@ -148,7 +146,7 @@ fnc_voronoi <- function(title_no_spaces = NA,
 # create feeder main
 fnc_voronoi(title_no_spaces = "feeder_main",
             sample = 25000,
-            size_px = 4500,
-            print_width_cm = 51,
-            print_height_cm = 71,
+            size_px = 2700,
+            print_width_cm = 31,
+            print_height_cm = 41,
             qr_code_signature = "https://github.com/RodDalBen/feeder_main_gen_art")
