@@ -145,8 +145,8 @@ fnc_voronoi <- function(title_no_spaces = NA,
 
 # create feeder main
 fnc_voronoi(title_no_spaces = "feeder_main",
-            sample = 25000,
-            size_px = 2700,
-            print_width_cm = 31,
-            print_height_cm = 41,
+            sample = 20000,
+            size_px = 2000,
+            print_width_cm = 21,
+            print_height_cm = 28,
             qr_code_signature = "https://github.com/RodDalBen/feeder_main_gen_art")
