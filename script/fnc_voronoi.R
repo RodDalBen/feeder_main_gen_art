@@ -14,11 +14,14 @@
 # 3. transform from .png to .jpg with Preview to replace transparency layer with solid black background (see "input/03_step3.jpg")
 
 fnc_voronoi <- function(title_no_spaces = NA,
-                        sample = 500,
+                        polygons = 500,
                         input_file = "03_step3.jpg",
                         input_path = here("input"),
+                        process_path = here("process"),
                         output_path = here("output"),
+                        print_path = here("output", "print"),
                         size_px = 1500,
+                        gif_fps = 2,
                         print_height_cm = NA,
                         print_width_cm = NA,
                         qr_code_signature = NA){
@@ -44,7 +47,7 @@ fnc_voronoi <- function(title_no_spaces = NA,
   if(!"ggvoronoi" %in% .packages()){library(ggvoronoi)}
   if(!"cropcircles" %in% .packages()){library(cropcircles)}
   if(!"magick" %in% .packages()){library(magick)}
-
+  
   # generate qrcode for signature   
   create_qr_code <- qrcode::generate_svg(qrcode::qr_code(qr_code_signature),
                                          filename = file.path(input_path, "qr_code.svg"),
@@ -66,78 +69,90 @@ fnc_voronoi <- function(title_no_spaces = NA,
     pivot_wider(names_from = channel, values_from = value) %>% 
     mutate(color = rgb(Red, Green, Blue))
   
-  # sample data frame
-  sample_size <- sample
-  img_sample <- img_wide[sample(nrow(img_wide), sample_size), ]
-  
-  # add random weights for point size
-  img_sample$size <- runif(sample_size)
-  
-  # plot a voronoi diagram
-  p <- 
-    ggplot(img_sample) +
-    geom_voronoi(mapping = aes(x = x, y = y, fill = color)) +
-    scale_fill_identity() +
-    scale_y_reverse() +
-    theme_void() +
-    theme(plot.margin = unit(c(-3, -3, -3, -3), "cm"))
-  
-  # save vonoroi diagram
-  ggsave(plot = p,
-         filename = "01_step1.jpeg", path = output_path,
-         height = size_px, width = size_px, units = "px")
-  
-  # load image, crop circle, add border
-  img_circle <- 
-    magick::image_read(cropcircles::crop_circle(here("output", "01_step1.jpeg"), 
-                                                bg_fill = "black", 
-                                                border_size = 5)) %>% 
-    magick::image_border(., color = "black", geometry = paste0(size_px/7.5, "x", size_px/7.5))
-  
-  # save circle with border  
-  magick::image_write(img_circle, 
-                      path = file.path(output_path, "02_step2.jpeg"), 
-                      format = "jpeg",
-                      quality = 100,
-                      density = 300)
-  
-  # read flatten image circle
-  img_circle <- magick::image_read(file.path(output_path, "02_step2.jpeg"))
-  
-  img_final <- magick::image_composite(img_circle,
-                                       img_qr_code,
-                                       offset = paste0("+", size_px*1.08, "+", size_px*1.08))
-  
-  # save final work
-  magick::image_write(img_final, 
-                      path = file.path(output_path, paste0(title_no_spaces, ".jpeg")), 
-                      format = "jpeg",
-                      quality = 100,
-                      density = 300)
-  
-  # add black background for printing
-  if(!is.na(print_height_cm)){
-    # read image
-    image_to_print <- image_read(file.path(output_path, paste0(title_no_spaces, ".jpeg")))
-    # cm to pixels
-    width_px <- round(print_width_cm*(300/2.54)) 
-    height_px <- round(print_height_cm*(300/2.54))
-    # original dimensions
-    img_info <- image_info(image_to_print)
-    orig_width <- img_info$width
-    orig_height <- img_info$height
-    # black background canvas
-    canvas <- image_blank(width_px, height_px, color = "black")
-    # image on the black background
-    composite_image <- image_composite(canvas, image_to_print, operator = "over",
-                                       offset = paste0("+", (width_px - orig_width) %/% 2, 
-                                                       "+", (height_px - orig_height) %/% 2))
-    # save
-    image_write(composite_image, 
-                path = file.path(output_path, paste0(title_no_spaces, ".pdf")), 
-                format = "pdf", 
-                density = "300x300")
+  # loop over sample
+  for(i in 1:length(polygons)){
+    
+    # sample data frame
+    img_sample <- img_wide[sample(nrow(img_wide), polygons[i]), ]
+    
+    # add random weights for point size
+    img_sample$size <- runif(polygons[i])
+    
+    # plot a voronoi diagram
+    p <- 
+      ggplot(img_sample) +
+      geom_voronoi(mapping = aes(x = x, y = y, fill = color)) +
+      scale_fill_identity() +
+      scale_y_reverse() +
+      theme_void() +
+      theme(plot.margin = unit(c(-3, -3, -3, -3), "cm"))
+    
+    # save vonoroi diagram
+    ggsave(plot = p,
+           filename = paste0("01_step1_", i, ".jpeg"), path = process_path,
+           height = size_px, width = size_px, units = "px")
+    
+    # load image, crop circle, add border
+    img_circle <- 
+      magick::image_read(cropcircles::crop_circle(file.path(process_path, paste0("01_step1_", i, ".jpeg")), 
+                                                  bg_fill = "black", 
+                                                  border_size = 5)) %>% 
+      magick::image_border(., color = "black", geometry = paste0(size_px/7.5, "x", size_px/7.5))
+    
+    # save circle with border  
+    magick::image_write(img_circle, 
+                        path = file.path(process_path, paste0("02_step2_", i, ".jpeg")), 
+                        format = "jpeg",
+                        quality = 100,
+                        density = 300)
+    
+    # read flatten image circle
+    img_circle <- magick::image_read(file.path(process_path, paste0("02_step2_", i, ".jpeg")))
+    
+    img_final <- magick::image_composite(img_circle,
+                                         img_qr_code,
+                                         offset = paste0("+", size_px*1.08, "+", size_px*1.08))
+    
+    # save final work
+    magick::image_write(img_final, 
+                        path = file.path(output_path, paste0("0", i, "_", title_no_spaces, "_", polygons[i], ".jpeg")), 
+                        format = "jpeg",
+                        quality = 100,
+                        density = 300)
+    
+    # add black background for printing
+    if(!is.na(print_height_cm)){
+      # read image
+      image_to_print <- image_read(file.path(output_path, paste0("0", i, "_", title_no_spaces, "_", polygons[i], ".jpeg")))
+      # cm to pixels
+      width_px <- round(print_width_cm*(300/2.54)) 
+      height_px <- round(print_height_cm*(300/2.54))
+      # original dimensions
+      img_info <- image_info(image_to_print)
+      orig_width <- img_info$width
+      orig_height <- img_info$height
+      # black background canvas
+      canvas <- image_blank(width_px, height_px, color = "black")
+      # image on the black background
+      composite_image <- image_composite(canvas, image_to_print, operator = "over",
+                                         offset = paste0("+", (width_px - orig_width) %/% 2, 
+                                                         "+", (height_px - orig_height) %/% 2))
+      # save
+      image_write(composite_image, 
+                  path = file.path(print_path, paste0("0", i, "_", title_no_spaces, "_", polygons[i], ".pdf")), 
+                  format = "pdf", 
+                  density = "300x300")}
   }
+  
+  # create gif
+  if(length(polygons) > 1){
+    # read images
+    img_list <- lapply(list.files(output_path, pattern = "\\.jpeg$", full.names = TRUE), magick::image_read)
+    # set 2 fps
+    img_animated <- 
+      ## save to disk
+      image_write(image = image_animate(image_join(img_list), fps = gif_fps),
+                  path = file.path(output_path, paste0(title_no_spaces, ".gif")))}
   
   # status message
   message(paste0("All done! See ", title_no_spaces, " at: ", output_path))
@@ -145,8 +160,8 @@ fnc_voronoi <- function(title_no_spaces = NA,
 
 # create feeder main
 fnc_voronoi(title_no_spaces = "feeder_main",
-            sample = 20000,
+            polygons = c(1858, 6097, 20000),
             size_px = 2000,
             print_width_cm = 21,
-            print_height_cm = 28,
+            print_height_cm = 26,
             qr_code_signature = "https://github.com/RodDalBen/feeder_main_gen_art")
