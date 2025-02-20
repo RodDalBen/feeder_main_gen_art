@@ -7,7 +7,7 @@ Rodrigo Dal Ben, 2025-01-20
 ## News! 
 
 This piece is/was part of the "Innovative Impressions: The Fusion of Art and Science" exhibition at the [McCaig Institute](https://mccaig.ucalgary.ca/) Arts Gallery by the [ARTSSociety](https://artssocietyucalgary.ca/). 
-Preparing for the exhibition was fun! Carina Oedigen and Ana Fuhrmann, from the [Marshall Health Economics Team](https://cumming.ucalgary.ca/research/health-economics/home#:~:text=Deborah%20Marshall%20and%20her%20team,patient%20engagement%20and%20patient%20centeredness.), 
+Preparing for the exhibition was fun! Carina Oedingen and Ana Fuhrmann, from the [Marshall Health Economics Team](https://cumming.ucalgary.ca/research/health-economics/home#:~:text=Deborah%20Marshall%20and%20her%20team,patient%20engagement%20and%20patient%20centeredness.), 
 contributed with design ideas and Carina, acting as my art manager (!), got a brand new frame from an anonymous benefactor.
 New ideas for future work are already flourishing, some of them involving Ana's own spinal X-rays :)
 
